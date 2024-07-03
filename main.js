@@ -1,38 +1,33 @@
-document.getElementById('send-btn').addEventListener('click', function() {
-    const userInput = document.getElementById('user-input').value;
-    if (userInput.trim() !== '') {
-        addUserMessage(userInput);
-        document.getElementById('user-input').value = '';
-        getBotResponse(userInput);
-    }
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+app.use(express.static('public'));
+
+wss.on('connection', (ws) => {
+    ws.on('message', (message) => {
+        console.log('received: %s', message);
+        const userMessage = message.toLowerCase();
+
+        let botMessage = "I'm sorry, I don't understand that.";
+        if (userMessage.includes('hello')) {
+            botMessage = 'Hello! How can I assist you today?';
+        } else if (userMessage.includes('help')) {
+            botMessage = 'Sure, what do you need help with?';
+        } else if (userMessage.includes('price')) {
+            botMessage = 'Our prices start at $19.99.';
+        }
+
+        ws.send(botMessage);
+    });
+
+    ws.send('Hi there! How can I help you today?');
 });
 
-function addUserMessage(message) {
-    const chatBox = document.getElementById('chat-box');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'chat-message user-message';
-    messageDiv.textContent = message;
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function addBotMessage(message) {
-    const chatBox = document.getElementById('chat-box');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'chat-message bot-message';
-    messageDiv.textContent = message;
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function getBotResponse(userInput) {
-    let botMessage = "I'm sorry, I don't understand that.";
-    if (userInput.toLowerCase().includes('hello')) {
-        botMessage = 'Hello! How can I assist you today?';
-    } else if (userInput.toLowerCase().includes('help')) {
-        botMessage = 'Sure, what do you need help with?';
-    } else if (userInput.toLowerCase().includes('price')) {
-        botMessage = 'Our prices start at $19.99.';
-    }
-    addBotMessage(botMessage);
-}
+server.listen(3000, () => {
+    console.log('Server is listening on port 3000');
+});
